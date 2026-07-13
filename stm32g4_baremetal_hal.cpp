@@ -11,10 +11,12 @@ namespace port_add { //port addresses
     constexpr uint32_t GPIOC       = 0x48000800;
     constexpr uint32_t GPIOD       = 0x48000C00;
     constexpr uint32_t GPIOF       = 0x48001400;
+
+    constexpr uint32_t RCC_APB1ENR1 = 0x40021044; // Clock bus register for Timer 2
+    constexpr uint32_t TIM2          = 0x40000000; // Physical base address of Timer 2
 }
 
-
-namespace pin_reg_add { //pin register addresses
+namespace pin_reg_add { //pin register address offsets
     constexpr uint32_t MODER = 0x00;   // Offset 0x00
     constexpr uint32_t OTYPER = 0x04;  // Offset 0x04
     constexpr uint32_t OSPEEDR = 0x08; // Offset 0x08
@@ -22,6 +24,35 @@ namespace pin_reg_add { //pin register addresses
     constexpr uint32_t IDR = 0x10;     // Offset 0x10
     constexpr uint32_t ODR = 0x14;     // Offset 0x14
     constexpr uint32_t BSRR = 0x18;    // Offset 0x18
+
+    constexpr uint32_t AFRL  = 0x20; // Offset 0x20 controls Pins 0 to 7
+    constexpr uint32_t AFRH  = 0x24; // Offset 0x24 controls Pins 8 to 15
+}
+namespace TIM2_regs {
+    inline volatile uint32_t& CR1   = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x00);
+    inline volatile uint32_t& EGR   = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x14);
+    inline volatile uint32_t& CCMR1 = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x18);
+    inline volatile uint32_t& CCMR2 = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x1C);
+    inline volatile uint32_t& CCER  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x20);
+    inline volatile uint32_t& PSC   = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x28);
+    inline volatile uint32_t& ARR   = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x2C);
+    inline volatile uint32_t& CCR1  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x34);
+    inline volatile uint32_t& CCR2  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x38);
+    inline volatile uint32_t& CCR3  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x3C);
+    inline volatile uint32_t& CCR4  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x40);
+    inline volatile uint32_t& BDTR  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x44);
+}
+
+
+namespace RCC_regs {
+    inline volatile uint32_t& CR        = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x00);
+    inline volatile uint32_t& CFGR      = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x08);
+    inline volatile uint32_t& AHB1ENR   = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x48);
+    inline volatile uint32_t& AHB2ENR   = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x4C);
+    inline volatile uint32_t& AHB3ENR   = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x50);
+    inline volatile uint32_t& APB1ENR1  = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x58);
+    inline volatile uint32_t& APB1ENR2  = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x5C);
+    inline volatile uint32_t& APB2ENR   = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x60);
 }
 
 enum class status : int32_t { 
@@ -258,15 +289,15 @@ class GPIO_PORT {
 public:    
 
     
-    void setPinMode(uint8_t pinNumber, uint8_t mode) {
+    void setPinMode(uint8_t pinNumber, uint8_t mode) {// 0 (input), 1 (output), 2 (alternate function), 3 (analog)
         volatile uint32_t* moder = reinterpret_cast<volatile uint32_t*>(port_base + pin_reg_add::MODER);
         uint8_t shift = pinNumber * 2;
     
-        *moder &= ~(0x3 << shift); // Clear old 2 bits
-        *moder |=  (mode << shift); // Set new 2 bits
+        *moder &= ~(0x3 << shift); // clear old 2 bits
+        *moder |=  (mode << shift); // set new 2 bits
     }
 
-   
+   // Push-Pull (0) or Open-Drain (1).
     void setPinOutputType(uint8_t pinNumber, uint8_t type) {
         volatile uint32_t* otyper = reinterpret_cast<volatile uint32_t*>(port_base + pin_reg_add::OTYPER);
     
@@ -274,22 +305,22 @@ public:
         *otyper |=  (type << pinNumber); // Set new 1 bit
     }
 
-    
+    // speed: Low (0), Medium (1), High (2), or Very High (3).
     void setPinSpeed(uint8_t pinNumber, uint8_t speed) {
         volatile uint32_t* ospeedr = reinterpret_cast<volatile uint32_t*>(port_base + pin_reg_add::OSPEEDR);
         uint8_t shift = pinNumber * 2;
     
-        *ospeedr &= ~(0x3 << shift); // Clear old 2 bits
-        *ospeedr |=  (speed << shift); // Set new 2 bits
+        *ospeedr &= ~(0x3 << shift); // clear old 2 bits
+        *ospeedr |=  (speed << shift); // set new 2 bits
     }
 
-    
+    // Floating (0), Pull-Up (1), or Pull-Down (2).
     void setPinPull(uint8_t pinNumber, uint8_t pull) {
         volatile uint32_t* pupdr = reinterpret_cast<volatile uint32_t*>(port_base + pin_reg_add::PUPDR);
         uint8_t shift = pinNumber * 2;
     
-        *pupdr &= ~(0x3 << shift); // Clear old 2 bits
-        *pupdr |=  (pull << shift); // Set new 2 bits
+        *pupdr &= ~(0x3 << shift); // clear old 2 bits
+        *pupdr |=  (pull << shift); // set new 2 bits
     }
 
     
@@ -297,12 +328,12 @@ public:
         volatile uint32_t* bsrr = reinterpret_cast<volatile uint32_t*>(port_base + pin_reg_add::BSRR);
     
         if (state) {
-            *bsrr = (1 << pinNumber);        // Writing to lower 16 bits forces pin HIGH
+            *bsrr = (1 << pinNumber);        // write to lower 16 bits forces pin HIGH
         } else {
-            *bsrr = (1 << (pinNumber + 16)); // Writing to upper 16 bits forces pin LOW
+            *bsrr = (1 << (pinNumber + 16)); // write upper 16 bits forces pin LOW
         }
     }
-
+    // Reads the instant voltage level on the external wire, returning true for 3.3V and false for Ground.
     bool readPin(uint32_t portBase, uint8_t pinNumber) {
         volatile uint32_t* idr = reinterpret_cast<volatile uint32_t*>(portBase + pin_reg_add::IDR);
     
@@ -312,6 +343,25 @@ public:
 
     void set_port_base(uint32_t n) {
         port_base = n;
+    }
+
+    void setPinAlternateFunction(uint8_t pinNumber, uint8_t alternateFunctionCode) {
+        volatile uint32_t* afr_register;
+        uint8_t shift;
+
+        if (pinNumber < 8) {
+            afr_register = reinterpret_cast<volatile uint32_t*>(port_base + 0x20);
+            shift = pinNumber * 4;        // map 0-7
+        } else {
+            afr_register = reinterpret_cast<volatile uint32_t*>(port_base + 0x24);
+            shift = (pinNumber - 8) * 4;  //normalize back to 0-7
+        }
+
+    // clear existing 4-bit configuration for this pin
+        *afr_register &= ~(0xF << shift); // 0xF = 1111
+    
+    // inject the new 4-bit alternate function routing code
+        *afr_register |= (alternateFunctionCode << shift);
     }
 
 private:
@@ -367,14 +417,80 @@ GPIO_PORT* GPIO::create_port(char port) {
     return ptr;
 }
 
+class PWM {
+private:
+    uint32_t psc_value;
+    uint32_t arr_value;
+    uint8_t channel;
+    uint32_t duty_value;
+
+public:
+    PWM(uint32_t p_v, uint32_t a_v, uint8_t ch, uint32_t d_v) : psc_value(p_v), arr_value(a_v), channel(ch), duty_value(d_v) { 
+
+        RCC_regs::APB1ENR1 |= (1 << 0);
+
+        [[maybe_unused]] volatile uint32_t dummy = RCC_regs::APB1ENR1;
+
+        TIM2_regs::PSC = psc_value; // prescaler
+
+        TIM2_regs::ARR = arr_value; //period
+
+        volatile uint32_t* ccr;
+        if (channel == 1) {
+            ccr = &TIM2_regs::CCR1;
+        }
+        else if (channel == 2) {
+            ccr = &TIM2_regs::CCR2;
+        }
+        else if (channel == 3) {
+            ccr = &TIM2_regs::CCR3;
+        }
+        else {
+            ccr = &TIM2_regs::CCR4;
+        }
+
+        *ccr = duty_value; //write duty cycle
+
+
+        volatile uint32_t* ccmr;
+        uint8_t shift;
+        if (channel == 1) { 
+            ccmr = &TIM2_regs::CCMR1; shift = 4; 
+        }
+        else if (channel == 2) { 
+            ccmr = &TIM2_regs::CCMR1; shift = 12; 
+        }
+        else if (channel == 3) { 
+            ccmr = &TIM2_regs::CCMR2; shift = 4; 
+        }
+        else { 
+            ccmr = &TIM2_regs::CCMR2; shift = 12; 
+        }
+
+        *ccmr &= ~(0x7 << shift);
+        *ccmr |= (0x6 << shift); 
+
+        uint8_t ccer_bit = (channel - 1) * 4;
+ 
+        TIM2_regs::CCER |= (1 << ccer_bit);
+
+        TIM2_regs::EGR = (1 << 0);
+
+        TIM2_regs::CR1 |= (1 << 0); //start the counter
+        
+
+    }
+};
 
 int main() {
-
+   
     GPIO_PORT* ins = GPIO::bootstrap('B');
-
     ins->set_port_base(port_add::GPIOB);
-    ins->setPinMode(3, 1);    // Pin 5 -> Output Mode
-    ins->writePin(3, true);   // Pin 5 -> HIGH (LED Turns ON!)
 
-    
+    ins->setPinMode(3, 2);              
+    ins->setPinAlternateFunction(3, 1); 
+
+    PWM pwm1(15, 999, 2, 1000); 
+
+    while (1) {}
 }
