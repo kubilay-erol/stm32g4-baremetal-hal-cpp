@@ -227,22 +227,3 @@ private:
     }
 
 };
-
-struct animal {
-    uint32_t* ptr_d = nullptr;
-    uint32_t a = 0;
-};
-
-
-
-int main() {
-
-    uint32_t* data_ptr = memalloc::alloc(sizeof(animal));
-
-    animal* ptr = new ((uint32_t*)(*data_ptr)) animal;
-
-    ptr->ptr_d = data_ptr;
-
-    ptr->a = (uint32_t)sizeof(animal);
-
-};
