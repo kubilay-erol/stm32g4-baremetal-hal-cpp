@@ -1,59 +1,101 @@
 
+#pragma once
+
 #include<cstdint>
 #include<new>
 #include<memalloc.hpp>
 
-namespace port_add { //port addresses
-    constexpr uint32_t RCC_AHB2ENR = 0x4002104C; //port clock
+namespace rcc_add {}
 
-    constexpr uint32_t GPIOA       = 0x48000000;
-    constexpr uint32_t GPIOB       = 0x48000400;
-    constexpr uint32_t GPIOC       = 0x48000800;
-    constexpr uint32_t GPIOD       = 0x48000C00;
-    constexpr uint32_t GPIOF       = 0x48001400;
+namespace port_add { //port addresseclock
 
-    constexpr uint32_t RCC_APB1ENR1 = 0x40021044; // Clock bus register for Timer 2
-    constexpr uint32_t TIM2          = 0x40000000; // Physical base address of Timer 2
+    using namespace rcc_add;
+    
+    inline volatile uint32_t* const GPIOA = reinterpret_cast<uint32_t*>(0x48000000);
+    inline volatile uint32_t* const GPIOB = reinterpret_cast<uint32_t*>(0x48000400);
+    inline volatile uint32_t* const GPIOC = reinterpret_cast<uint32_t*>(0x48000800);
+    inline volatile uint32_t* const GPIOD = reinterpret_cast<uint32_t*>(0x48000C00);
+    inline volatile uint32_t* const GPIOF = reinterpret_cast<uint32_t*>(0x48001400);
+
+}
+
+
+namespace rcc_add {
+
+    inline volatile uint32_t* const RCC_AHB2ENR   = reinterpret_cast<uint32_t*>(0x4002104C);  // →  GPIOA-G, ADC1/2         — no timers here
+    inline volatile uint32_t* const RCC_APB1ENR1  = reinterpret_cast<uint32_t*>(0x40021058);  // →  TIM2, TIM3, TIM4, TIM6, TIM7
+    inline volatile uint32_t* const RCC_APB2ENR   = reinterpret_cast<uint32_t*>(0x40021060);  // →  TIM1, TIM8, TIM15, TIM16, TIM17
+
+}
+
+namespace bus_add {
+
+    inline volatile uint32_t* const TIM1_bus    = reinterpret_cast<uint32_t*>(0x40012C00);
+    inline volatile uint32_t* const TIM2_bus    = reinterpret_cast<uint32_t*>(0x40000000);
+    inline volatile uint32_t* const TIM3_bus    = reinterpret_cast<uint32_t*>(0x40000400);
+    inline volatile uint32_t* const TIM4_bus    = reinterpret_cast<uint32_t*>(0x40000800);
+    inline volatile uint32_t* const TIM6_bus    = reinterpret_cast<uint32_t*>(0x40001000);
+    inline volatile uint32_t* const TIM7_bus    = reinterpret_cast<uint32_t*>(0x40001400);
+    inline volatile uint32_t* const TIM8_bus    = reinterpret_cast<uint32_t*>(0x40013400);
+    inline volatile uint32_t* const TIM15_bus   = reinterpret_cast<uint32_t*>(0x40014000);
+    inline volatile uint32_t* const TIM16_bus   = reinterpret_cast<uint32_t*>(0x40014400);
+    inline volatile uint32_t* const TIM17_bus   = reinterpret_cast<uint32_t*>(0x40014800);
 }
 
 namespace pin_reg_add { //pin register address offsets
-    constexpr uint32_t MODER = 0x00;   // Offset 0x00
-    constexpr uint32_t OTYPER = 0x04;  // Offset 0x04
-    constexpr uint32_t OSPEEDR = 0x08; // Offset 0x08
-    constexpr uint32_t PUPDR = 0x0C;   // Offset 0x0C
-    constexpr uint32_t IDR = 0x10;     // Offset 0x10
-    constexpr uint32_t ODR = 0x14;     // Offset 0x14
-    constexpr uint32_t BSRR = 0x18;    // Offset 0x18
 
-    constexpr uint32_t AFRL  = 0x20; // Offset 0x20 controls Pins 0 to 7
-    constexpr uint32_t AFRH  = 0x24; // Offset 0x24 controls Pins 8 to 15
-}
-namespace TIM2_regs {
-    inline volatile uint32_t& CR1   = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x00);
-    inline volatile uint32_t& EGR   = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x14);
-    inline volatile uint32_t& CCMR1 = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x18);
-    inline volatile uint32_t& CCMR2 = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x1C);
-    inline volatile uint32_t& CCER  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x20);
-    inline volatile uint32_t& PSC   = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x28);
-    inline volatile uint32_t& ARR   = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x2C);
-    inline volatile uint32_t& CCR1  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x34);
-    inline volatile uint32_t& CCR2  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x38);
-    inline volatile uint32_t& CCR3  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x3C);
-    inline volatile uint32_t& CCR4  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x40);
-    inline volatile uint32_t& BDTR  = *reinterpret_cast<volatile uint32_t*>(0x40000000 + 0x44);
+    const uint32_t MODER = 0x00;  // 00 input, 01 output, 10 alternate function, 11 analog
+    const uint32_t OTYPER = 0x04; // output type: 0 push-pull, 1 open-drain
+    const uint32_t OSPEEDR = 0x08; // speed 
+    const uint32_t PUPDR = 0x0C;   // 00 no pull, 01 pull-up, 10 pull-down
+    const uint32_t IDR = 0x10;     // input data register
+    const uint32_t ODR = 0x14;     // output data register
+    const uint32_t BSRR = 0x18;    
+
+    const uint32_t AFRL  = 0x20; // Offset 0x20 controls Pins 0 to 7
+    const uint32_t AFRH  = 0x24; // Offset 0x24 controls Pins 8 to 15
+
 }
 
+namespace timer_bus_offset {
 
-namespace RCC_regs {
-    inline volatile uint32_t& CR        = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x00);
-    inline volatile uint32_t& CFGR      = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x08);
-    inline volatile uint32_t& AHB1ENR   = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x48);
-    inline volatile uint32_t& AHB2ENR   = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x4C);
-    inline volatile uint32_t& AHB3ENR   = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x50);
-    inline volatile uint32_t& APB1ENR1  = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x58);
-    inline volatile uint32_t& APB1ENR2  = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x5C);
-    inline volatile uint32_t& APB2ENR   = *reinterpret_cast<volatile uint32_t*>(0x40021000 + 0x60);
+    const uint32_t CR1   = 0x00;
+    const uint32_t SMCR  = 0x08; 
+    const uint32_t EGR   = 0x14;
+    const uint32_t CCMR1 = 0x18;
+    const uint32_t CCMR2 = 0x1C;
+    const uint32_t CCER  = 0x20;
+    const uint32_t PSC   = 0x28;
+    const uint32_t ARR   = 0x2C;
+    const uint32_t CCR1  = 0x34;
+    const uint32_t CCR2  = 0x38;
+    const uint32_t CCR3  = 0x3C;
+    const uint32_t CCR4  = 0x40;
+    const uint32_t BDTR  = 0x44;
 }
+
+
+namespace rcc_offset {
+
+    const uint32_t CR        = 0x00;
+    const uint32_t CFGR      = 0x08;
+    const uint32_t AHB1ENR   = 0x48;
+    const uint32_t AHB2ENR   = 0x4C;
+    const uint32_t AHB3ENR   = 0x50;
+    const uint32_t APB1ENR1  = 0x58;
+    const uint32_t APB1ENR2  = 0x5C;
+    const uint32_t APB2ENR   = 0x60;
+
+}
+
+namespace adc_base {
+
+    inline volatile uint32_t* const ADC1 = reinterpret_cast<uint32_t*>(0x50000000);
+    inline volatile uint32_t* const ADC2 = reinterpret_cast<uint32_t*>(0x50000100);
+
+}
+
+
 
 enum class status : int32_t { 
     default_error = -1,
@@ -75,43 +117,6 @@ public:
 
     GPIO() = default;
 
-    static GPIO_PORT* bootstrap(char port) {
-
-        GPIO::init_port_ins(port); //create port instance 
-
-        GPIO::initialize_port(port); // initialize physical port
-
-        int32_t n = 0;
-
-        switch(port) {
-            case 'A':
-                n = 0;
-                break;
-            case 'B':
-                n = 1;
-                break;
-            case 'C':
-                n = 2;
-                break;
-            case 'D':
-                n = 3;
-                break;
-            case 'F':
-                n = 4;
-                break;
-            default:
-                n = -1;
-                break;
-        };
-        
-        if (n == -1) {
-            return nullptr;
-        }
-
-        return GPIO::return_ins_add(n);
-
-    }   
-
     static void init_port_ins(char x) {
         create_port(x);
     }
@@ -119,51 +124,37 @@ public:
     static GPIO_PORT* return_ins_add(uint32_t x) {
         return port_ptr[x];
     }
+    static GPIO_PORT* bootstrap(char port);
 
     static status initialize_port(char port) {
 
         switch(port) {
             case 'A': {
                 volatile uint32_t* rcc_ahb2enr = reinterpret_cast<volatile uint32_t*>(port_add::RCC_AHB2ENR);
-                if ((*rcc_ahb2enr | (1<<0)) == 1) {
-                    return status::unchanged;
-                }
                 *rcc_ahb2enr |= 1 << 0; 
                 return status::default_success;
             }
 
             case 'B': {
                 volatile uint32_t* rcc_ahb2enr = reinterpret_cast<volatile uint32_t*>(port_add::RCC_AHB2ENR);
-                if ((*rcc_ahb2enr | (1<<1)) == 1) {
-                    return status::unchanged;
-                }
                 *rcc_ahb2enr |= 1 << 1; 
                 return status::default_success;
             }
 
             case 'C': {
                 volatile uint32_t* rcc_ahb2enr = reinterpret_cast<volatile uint32_t*>(port_add::RCC_AHB2ENR);
-                if ((*rcc_ahb2enr | (1<<2)) == 1) {
-                    return status::unchanged;
-                }
                 *rcc_ahb2enr |= 1 << 2; 
                 return status::default_success;
             }
 
             case 'D': {
                 volatile uint32_t* rcc_ahb2enr = reinterpret_cast<volatile uint32_t*>(port_add::RCC_AHB2ENR);
-                if ((*rcc_ahb2enr | (1<<3)) == 1) {
-                    return status::unchanged;
-                }
                 *rcc_ahb2enr |= 1 << 3; 
                 return status::default_success;
             }
 
             case 'F': {
                 volatile uint32_t* rcc_ahb2enr = reinterpret_cast<volatile uint32_t*>(port_add::RCC_AHB2ENR);
-                if ((*rcc_ahb2enr | (1<<4)) == 1) {
-                    return status::unchanged;
-                }
                 *rcc_ahb2enr |= 1 << 4; 
                 return status::default_success;
             }   
@@ -181,45 +172,30 @@ public:
         switch(port) {
             case 'A': {
                 volatile uint32_t* rcc_ahb2enr = reinterpret_cast<volatile uint32_t*>(port_add::RCC_AHB2ENR);
-                if ((*rcc_ahb2enr | (0<<0)) == 0) {
-                    return status::unchanged;
-                }
                 *rcc_ahb2enr &= 0 << 0;
                 return status::default_success; 
             }
 
             case 'B': {
                 volatile uint32_t* rcc_ahb2enr = reinterpret_cast<volatile uint32_t*>(port_add::RCC_AHB2ENR);
-                if ((*rcc_ahb2enr | (0<<1)) == 0) {
-                    return status::unchanged;
-                }
                 *rcc_ahb2enr &= 0 << 1; 
                 return status::default_success;
             }
 
             case 'C': {
                 volatile uint32_t* rcc_ahb2enr = reinterpret_cast<volatile uint32_t*>(port_add::RCC_AHB2ENR);
-                if ((*rcc_ahb2enr | (0<<2)) == 0) {
-                    return status::unchanged;
-                }
                 *rcc_ahb2enr &= 0 << 2; 
                 return status::default_success; 
             }
 
             case 'D': {
                 volatile uint32_t* rcc_ahb2enr = reinterpret_cast<volatile uint32_t*>(port_add::RCC_AHB2ENR);
-                if ((*rcc_ahb2enr | (0<<3)) == 0) {
-                    return status::unchanged;
-                }
                 *rcc_ahb2enr &= 0 << 3; 
                 return status::default_success;
             }
 
             case 'F': {
                 volatile uint32_t* rcc_ahb2enr = reinterpret_cast<volatile uint32_t*>(port_add::RCC_AHB2ENR);
-                if ((*rcc_ahb2enr | (0<<4)) == 0) {
-                    return status::unchanged;
-                }
                 *rcc_ahb2enr &= 0 << 4; 
                 return status::default_success;
             }
@@ -269,7 +245,7 @@ public:
 
 private:
 
-    constexpr static inline char pins[5] = {'A', 'B', 'C', 'D', 'F'};
+    constexpr static char pins[5] = {'A', 'B', 'C', 'D', 'F'};
 
     static inline bool count = 0;
 
@@ -282,6 +258,8 @@ protected:
 
 };
 
+
+
 class GPIO_PORT {
     
     friend GPIO_PORT* GPIO::create_port(char port);
@@ -289,7 +267,7 @@ class GPIO_PORT {
 public:    
 
     
-    void setPinMode(uint8_t pinNumber, uint8_t mode) {// 0 (input), 1 (output), 2 (alternate function), 3 (analog)
+    void set_pin_mode(uint8_t pinNumber, uint8_t mode) {// 0 (input), 1 (output), 2 (alternate function), 3 (analog)
         volatile uint32_t* moder = reinterpret_cast<volatile uint32_t*>(port_base + pin_reg_add::MODER);
         uint8_t shift = pinNumber * 2;
     
@@ -298,7 +276,7 @@ public:
     }
 
    // Push-Pull (0) or Open-Drain (1).
-    void setPinOutputType(uint8_t pinNumber, uint8_t type) {
+    void set_output_type(uint8_t pinNumber, uint8_t type) {
         volatile uint32_t* otyper = reinterpret_cast<volatile uint32_t*>(port_base + pin_reg_add::OTYPER);
     
         *otyper &= ~(0x1 << pinNumber); // Clear old 1 bit
@@ -306,7 +284,7 @@ public:
     }
 
     // speed: Low (0), Medium (1), High (2), or Very High (3).
-    void setPinSpeed(uint8_t pinNumber, uint8_t speed) {
+    void set_pin_speed(uint8_t pinNumber, uint8_t speed) {
         volatile uint32_t* ospeedr = reinterpret_cast<volatile uint32_t*>(port_base + pin_reg_add::OSPEEDR);
         uint8_t shift = pinNumber * 2;
     
@@ -315,7 +293,7 @@ public:
     }
 
     // Floating (0), Pull-Up (1), or Pull-Down (2).
-    void setPinPull(uint8_t pinNumber, uint8_t pull) {
+    void set_pin_pull(uint8_t pinNumber, uint8_t pull) {
         volatile uint32_t* pupdr = reinterpret_cast<volatile uint32_t*>(port_base + pin_reg_add::PUPDR);
         uint8_t shift = pinNumber * 2;
     
@@ -324,7 +302,7 @@ public:
     }
 
     
-    void writePin(uint8_t pinNumber, bool state) {
+    void write_pin(uint8_t pinNumber, bool state) {
         volatile uint32_t* bsrr = reinterpret_cast<volatile uint32_t*>(port_base + pin_reg_add::BSRR);
     
         if (state) {
@@ -334,34 +312,44 @@ public:
         }
     }
     // Reads the instant voltage level on the external wire, returning true for 3.3V and false for Ground.
-    bool readPin(uint32_t portBase, uint8_t pinNumber) {
+    bool read_pin(uint32_t portBase, uint8_t pinNumber) {
         volatile uint32_t* idr = reinterpret_cast<volatile uint32_t*>(portBase + pin_reg_add::IDR);
     
        
         return (*idr & (1 << pinNumber)) != 0;
     }
 
-    void set_port_base(uint32_t n) {
-        port_base = n;
+    void set_port_base(volatile uint32_t* n) {
+
+        port_base = (uint32_t)n;
     }
 
-    void setPinAlternateFunction(uint8_t pinNumber, uint8_t alternateFunctionCode) {
-        volatile uint32_t* afr_register;
-        uint8_t shift;
-
-        if (pinNumber < 8) {
-            afr_register = reinterpret_cast<volatile uint32_t*>(port_base + 0x20);
-            shift = pinNumber * 4;        // map 0-7
-        } else {
-            afr_register = reinterpret_cast<volatile uint32_t*>(port_base + 0x24);
-            shift = (pinNumber - 8) * 4;  //normalize back to 0-7
+    volatile uint32_t* get_gpio_base(char port) {
+        switch (port) {
+            case 'A': return port_add::GPIOA;
+            case 'B': return port_add::GPIOB;
+            case 'C': return port_add::GPIOC;
+            case 'D': return port_add::GPIOD;
+            case 'F': return port_add::GPIOF;
+            default:      return nullptr; // invalid port
         }
-
-    // clear existing 4-bit configuration for this pin
-        *afr_register &= ~(0xF << shift); // 0xF = 1111
+    }
     
-    // inject the new 4-bit alternate function routing code
-        *afr_register |= (alternateFunctionCode << shift);
+    void set_pin_alternate_function(uint8_t pin) {
+        volatile uint32_t* base = get_gpio_base(port);
+        if (base == nullptr) return;
+
+        volatile uint32_t* moder_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + pin_reg_add::MODER
+        );
+
+        *moder_reg &= ~(0b11 << (pin * 2));  // clear both bits
+
+        *moder_reg |= (0b10 << (pin * 2));
+    }
+
+    char get_port() {
+        return port;
     }
 
 private:
@@ -410,87 +398,355 @@ GPIO_PORT* GPIO::create_port(char port) {
 
     uint32_t* data_ptr = memalloc::alloc(sizeof(GPIO_PORT)); 
 
-    GPIO_PORT* ptr = new ((uint32_t*)(*data_ptr)) GPIO_PORT(data_ptr, n); 
+    GPIO_PORT* ptr = new ((uint32_t*)(*data_ptr)) GPIO_PORT(data_ptr, port); 
 
     port_ptr[n] = ptr;
 
     return ptr;
 }
 
+
+GPIO_PORT* GPIO::bootstrap(char port) {
+
+    GPIO::init_port_ins(port); //create port instance 
+
+    GPIO::initialize_port(port); // initialize physical port
+
+    int32_t n = 0;
+
+    switch(port) {
+        case 'A':
+            n = 0;
+            break;
+        case 'B':
+            n = 1;
+            break;
+        case 'C':
+        n = 2;
+            break;
+        case 'D':
+            n = 3;
+            break;
+        case 'F':
+            n = 4;
+            break;
+        default:
+            n = -1;
+            break;
+    };
+        
+    if (n == -1) {
+        return nullptr;
+    }
+
+
+    GPIO_PORT* p = GPIO::return_ins_add(n);
+
+    p->set_port_base(p->get_gpio_base(port));
+
+    return GPIO::return_ins_add(n);
+
+}   
+
+
+
+
 class PWM {
 private:
+    GPIO_PORT* port_instance;
+    char port_instance_char;
     uint32_t psc_value;
     uint32_t arr_value;
-    uint8_t channel;
+    uint8_t channel_;
     uint32_t duty_value;
 
 public:
-    PWM(uint32_t p_v, uint32_t a_v, uint8_t ch, uint32_t d_v) : psc_value(p_v), arr_value(a_v), channel(ch), duty_value(d_v) { 
 
-        RCC_regs::APB1ENR1 |= (1 << 0);
+    PWM(GPIO_PORT* ins) : port_instance(ins) {
 
-        [[maybe_unused]] volatile uint32_t dummy = RCC_regs::APB1ENR1;
-
-        TIM2_regs::PSC = psc_value; // prescaler
-
-        TIM2_regs::ARR = arr_value; //period
-
-        volatile uint32_t* ccr;
-        if (channel == 1) {
-            ccr = &TIM2_regs::CCR1;
-        }
-        else if (channel == 2) {
-            ccr = &TIM2_regs::CCR2;
-        }
-        else if (channel == 3) {
-            ccr = &TIM2_regs::CCR3;
-        }
-        else {
-            ccr = &TIM2_regs::CCR4;
-        }
-
-        *ccr = duty_value; //write duty cycle
-
-
-        volatile uint32_t* ccmr;
-        uint8_t shift;
-        if (channel == 1) { 
-            ccmr = &TIM2_regs::CCMR1; shift = 4; 
-        }
-        else if (channel == 2) { 
-            ccmr = &TIM2_regs::CCMR1; shift = 12; 
-        }
-        else if (channel == 3) { 
-            ccmr = &TIM2_regs::CCMR2; shift = 4; 
-        }
-        else { 
-            ccmr = &TIM2_regs::CCMR2; shift = 12; 
-        }
-
-        *ccmr &= ~(0x7 << shift);
-        *ccmr |= (0x6 << shift); 
-
-        uint8_t ccer_bit = (channel - 1) * 4;
- 
-        TIM2_regs::CCER |= (1 << ccer_bit);
-
-        TIM2_regs::EGR = (1 << 0);
-
-        TIM2_regs::CR1 |= (1 << 0); //start the counter
-        
+        port_instance_char = port_instance->get_port();
 
     }
+
+    void enable_timer_clock(int timer) {
+        switch (timer) {
+            case 2: 
+                *rcc_add::RCC_APB1ENR1 |= (1 << 0); 
+                break;  // TIM2
+            case 3: 
+                *rcc_add::RCC_APB1ENR1 |= (1 << 1); 
+                break;  // TIM3
+            case 4: 
+                *rcc_add::RCC_APB1ENR1 |= (1 << 2);
+                break;  // TIM4
+            case 6: 
+                *rcc_add::RCC_APB1ENR1 |= (1 << 4); 
+                break;  // TIM6
+            case 7: 
+                *rcc_add::RCC_APB1ENR1 |= (1 << 5); 
+                break;  // TIM7
+
+            case 1:  
+                *rcc_add::RCC_APB2ENR |= (1 << 11); 
+                break; // TIM1
+            case 8:  
+                *rcc_add::RCC_APB2ENR |= (1 << 13); 
+                break; // TIM8
+            case 15: 
+                *rcc_add::RCC_APB2ENR |= (1 << 16); 
+                break; // TIM15
+            case 16: 
+                *rcc_add::RCC_APB2ENR |= (1 << 17); 
+                break; // TIM16
+            case 17: 
+                *rcc_add::RCC_APB2ENR |= (1 << 18); 
+                break; // TIM17
+
+            default: 
+                return; // invalid timer number
+        }
+    }
+
+    volatile uint32_t* get_timer_base(int timer) {
+        switch (timer) {
+            case 1:  return 
+                bus_add::TIM1_bus;
+            case 2:  return 
+                bus_add::TIM2_bus;
+            case 3:  return 
+                bus_add::TIM3_bus;
+            case 4:  return 
+                bus_add::TIM4_bus;
+            case 6:  return 
+                bus_add::TIM6_bus;
+            case 7:  return 
+                bus_add::TIM7_bus;
+            case 8:  return 
+                bus_add::TIM8_bus;
+            case 15: return 
+                bus_add::TIM15_bus;
+            case 16: return 
+                bus_add::TIM16_bus;
+            case 17: return 
+                bus_add::TIM17_bus;
+            default:
+                return nullptr; 
+        }
+    }   
+
+
+    volatile uint32_t* get_gpio_base(char port) {
+        switch (port) {
+            case 'A': 
+                return port_add::GPIOA;
+            case 'B': 
+                return port_add::GPIOB;
+            case 'C': 
+                return port_add::GPIOC;
+            case 'D': 
+                return port_add::GPIOD;
+            case 'F': 
+                return port_add::GPIOF;
+            default:      
+                return nullptr;
+        }
+    }
+
+    void select_af_number(uint8_t pin, uint8_t af_number) {
+
+        volatile uint32_t* base = get_gpio_base(port_instance_char);
+        if (base == nullptr) return;
+
+        if (pin <= 7) {
+            volatile uint32_t* afrl_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + pin_reg_add::AFRL
+            );
+
+            *afrl_reg |= (af_number << (pin * 4));
+        } else {
+            volatile uint32_t* afrh_reg = reinterpret_cast<volatile uint32_t*>(
+                reinterpret_cast<volatile uint8_t*>(base) + pin_reg_add::AFRH
+            );
+
+            *afrh_reg |= (af_number << ((pin - 8) * 4));
+        }
+    }
+
+
+    void set_prescaler(int timer, uint32_t value) {
+
+        psc_value = value;
+
+        volatile uint32_t* base = get_timer_base(timer);
+        if (base == nullptr) return;
+
+        volatile uint32_t* psc_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + timer_bus_offset::PSC
+        );
+
+        *psc_reg = value;  
+    }
+
+    void set_auto_reload(int timer, uint32_t value) {
+
+        arr_value = value;
+
+        volatile uint32_t* base = get_timer_base(timer);
+        if (base == nullptr) return;
+
+        volatile uint32_t* arr_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + timer_bus_offset::ARR
+        );
+
+        *arr_reg = value;
+    }
+
+    void set_duty(int timer, uint8_t channel, uint32_t value) {
+
+        duty_value = value;
+
+        volatile uint32_t* base = get_timer_base(timer);
+        if (base == nullptr) return;
+
+        uint32_t offset;
+        switch (channel) {
+            case 1: offset = timer_bus_offset::CCR1; break;
+            case 2: offset = timer_bus_offset::CCR2; break;
+            case 3: offset = timer_bus_offset::CCR3; break;
+            case 4: offset = timer_bus_offset::CCR4; break;
+            default: return; 
+        }
+
+        volatile uint32_t* ccr_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + offset
+        );
+
+        *ccr_reg = value;
+    }
+
+
+    void set_pwm_mode(int timer, uint8_t channel) {
+        volatile uint32_t* base = get_timer_base(timer);
+        if (base == nullptr) return;
+
+        uint32_t offset;
+        uint8_t shift;
+
+        switch (channel) {
+            case 1: offset = timer_bus_offset::CCMR1; shift = 4;  break;
+            case 2: offset = timer_bus_offset::CCMR1; shift = 12; break;
+            case 3: offset = timer_bus_offset::CCMR2; shift = 4;  break; 
+            case 4: offset = timer_bus_offset::CCMR2; shift = 12; break; 
+            default: return;
+        }
+
+        volatile uint32_t* ccmr_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + offset
+        );
+
+        *ccmr_reg |= (0b110 << shift);
+    }
+
+    void enable_channel(int timer, uint8_t channel) {
+
+        channel_ = channel;
+
+        volatile uint32_t* base = get_timer_base(timer);
+        if (base == nullptr) return;
+
+        uint8_t bit;
+        switch (channel) {
+            case 1: bit = 0;  break;  
+            case 2: bit = 4;  break;
+            case 3: bit = 8;  break; 
+            case 4: bit = 12; break;  
+            default: return;
+        }
+
+        volatile uint32_t* ccer_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + timer_bus_offset::CCER
+        );
+
+        *ccer_reg |= (1 << bit);
+    }
+
+    void start_timer(int timer) {
+        volatile uint32_t* base = get_timer_base(timer);
+        if (base == nullptr) return;
+
+        volatile uint32_t* cr1_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + timer_bus_offset::CR1
+        );
+
+        *cr1_reg |= (1 << 0); 
+    }
+
+    void set_input_capture_mode(int timer) {
+        volatile uint32_t* base = get_timer_base(timer);
+        if (base == nullptr) return;
+
+        volatile uint32_t* ccmr1_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + timer_bus_offset::CCMR1
+        );
+
+        *ccmr1_reg &= ~(0x3 << 0);   
+        *ccmr1_reg |=  (0x1 << 0);  
+
+        *ccmr1_reg &= ~(0x3 << 8);   
+        *ccmr1_reg |=  (0x2 << 8); 
+    }
+
+    void set_input_polarity(int timer) {
+        volatile uint32_t* base = get_timer_base(timer);
+        if (base == nullptr) return;
+
+        volatile uint32_t* ccer_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + timer_bus_offset::CCER
+        );
+
+        *ccer_reg &= ~(1 << 1);   
+        *ccer_reg |=  (1 << 5);  
+    }
+
+    void set_trigger_reset_mode(int timer) {
+        volatile uint32_t* base = get_timer_base(timer);
+        if (base == nullptr) return;
+
+        volatile uint32_t* smcr_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + timer_bus_offset::SMCR
+        );
+
+        *smcr_reg &= ~(0x7 << 4);  
+        *smcr_reg |=  (0x5 << 4);  
+
+        *smcr_reg &= ~(0x7 << 0);  
+        *smcr_reg |=  (0x4 << 0);   
+    }
+
+    uint32_t read_period(int timer) {
+        volatile uint32_t* base = get_timer_base(timer);
+        if (base == nullptr) {
+            return 0;
+        }
+        volatile uint32_t* ccr1_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + timer_bus_offset::CCR1
+        );
+
+        return *ccr1_reg;
+    }
+
+    uint32_t read_pulse_width(int timer) {
+        volatile uint32_t* base = get_timer_base(timer);
+        if (base == nullptr) {
+            return 0;
+        }
+        volatile uint32_t* ccr2_reg = reinterpret_cast<volatile uint32_t*>(
+            reinterpret_cast<volatile uint8_t*>(base) + timer_bus_offset::CCR2
+        );
+
+        return *ccr2_reg;
+    }
+
 };
 
-int main() {
-   
-    GPIO_PORT* ins = GPIO::bootstrap('B');
-    ins->set_port_base(port_add::GPIOB);
 
-    ins->setPinMode(3, 2);              
-    ins->setPinAlternateFunction(3, 1); 
-
-    PWM pwm1(15, 999, 2, 1000); 
-
-    while (1) {}
-}
