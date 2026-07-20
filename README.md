@@ -31,5 +31,5 @@ The HAL abstracts direct memory-mapped I/O registers using volatile raw pointers
 ## ⚙️ How to Use
 
 ### Prerequisites
-1. An environment set up for ARM cross-compilation (e.g., PlatformIO on Visual Studio Code).
-2. Implementation of `memalloc.hpp` providing the `memalloc::alloc(size_t)` interface to track/manage heap configurations.
+1. An environment set up for ARM cross-compilation (PlatformIO on Visual Studio Code).
+2. Implementation of `memalloc.hpp` header to track/manage heap configurations.
